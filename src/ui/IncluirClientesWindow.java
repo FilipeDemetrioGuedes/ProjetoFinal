@@ -4,6 +4,7 @@ import java.sql.SQLException;
 
 import dao.ClienteDAO;
 import domain.Cliente;
+import sync.ClienteRestApi;
 import totalcross.sys.Settings;
 import totalcross.ui.Button;
 import totalcross.ui.ComboBox;
@@ -43,8 +44,8 @@ public class IncluirClientesWindow extends Window {
 		editEmail = new Edit();
 		editEmail.caption = "exemplo@email.com";
 		cbTipoPessoa = new ComboBox();
-		cbTipoPessoa.add("Física");
-		cbTipoPessoa.add("Jurídica");
+		cbTipoPessoa.add("FISICA");
+		cbTipoPessoa.add("JURIDICA");
 
 		editCpf = new Edit("999.999.999-99");
 		editCpf.setMode(Edit.NORMAL, true);
@@ -155,7 +156,9 @@ public class IncluirClientesWindow extends Window {
 				return;
 				if (clienteDAO.insertCliente(cliente)) {
 					new MessageBox("Info", "Cliente Inserido!").popup();
-					;
+					//ClienteRestApi clienteApi = new ClienteRestApi();
+					//String retorno = clienteApi.conecta(cliente);
+					//new MessageBox("Info", retorno).popup();;
 				}
 				unpop();
 		} catch (Exception e) {
@@ -195,7 +198,7 @@ public class IncluirClientesWindow extends Window {
 	private Cliente screenToDomain() throws Exception {
 		String nome = editNome.getText();
 		String email = editEmail.getText();
-		String telefone = editTelefone.getText();
+		String telefone = editTelefone.getTextWithoutMask();
 
 		String tipoPessoa = (String) cbTipoPessoa.getSelectedItem();
 		String documento = "";
@@ -224,7 +227,7 @@ public class IncluirClientesWindow extends Window {
 		cliente.telefone = telefone;
 		cliente.tipoPessoa = tipoPessoa;
 		cliente.documento = documento;
-		
+		cliente.status = "Pendente";
 		return cliente;
 	}
 	

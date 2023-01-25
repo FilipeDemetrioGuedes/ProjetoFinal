@@ -8,6 +8,8 @@ public class Cliente {
 	public String telefone;
 	public String tipoPessoa;
 	public String documento;
+	public String status;
+	
 	public int getIdCliente() {
 		return idCliente;
 	}

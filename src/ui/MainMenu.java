@@ -12,17 +12,18 @@ import util.DatabaseManager;
 public class MainMenu extends MainWindow {
 
 	private Button btClientes;
+	private Button btSair;
 
 	public MainMenu() throws SQLException {
 		DatabaseManager.loadTabelas();
-		btClientes = new Button("Clientes");
-
+		btClientes = new Button("Meus Clientes");
+		btSair = new Button("Sair");
 	}
 
 	@Override
 	public void initUI() {
 		add(btClientes, LEFT + 10, TOP + 10, FILL - 10, PREFERRED);
-
+		add(btSair, CENTER, BOTTOM -10, 50, PREFERRED);
 	}
 
 	@Override
@@ -37,10 +38,14 @@ public class MainMenu extends MainWindow {
 					Vm.debug(e.getMessage());
 				}
 				clienteWindow.popup();
+			
+			}else if (event.target == btSair) {
+				exit(AFTER);
 			}
 			break;
 
 		default:
+			
 			break;
 		}
 		super.onEvent(event);

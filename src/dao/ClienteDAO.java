@@ -15,14 +15,14 @@ public class ClienteDAO {
 
 	public boolean insertCliente(Cliente cliente) throws SQLException {
 		PreparedStatement ps = DatabaseManager.getConnection()
-				.prepareStatement("INSERT INTO CLIENTES VALUES (?,?,?,?,?,?)");
+				.prepareStatement("INSERT INTO CLIENTES VALUES (?,?,?,?,?,?,?)");
 		ps.setInt(1, cliente.idCliente);
 		ps.setString(2, cliente.nome);
 		ps.setString(3, cliente.email);
 		ps.setString(4, cliente.telefone);
 		ps.setString(5, cliente.tipoPessoa);
 		ps.setString(6, cliente.documento);
-
+		ps.setString(7, cliente.status);
 		int inserted = ps.executeUpdate();
 		ps.close();
 
@@ -75,6 +75,34 @@ public class ClienteDAO {
 			throw e;
 		}
 	}
+	
+	public List<Cliente> findAllClientesByStatus() throws SQLException {
+		List<Cliente> clienteList = new ArrayList<Cliente>();
+		try {
+			Statement st = DatabaseManager.getConnection().createStatement();
+			ResultSet rs = st.executeQuery("SELECT IDCLIENTE,NOME , EMAIL, TELEFONE , TIPOPESSOA , DOCUMENTO , STATUS FROM CLIENTES WHERE STATUS = ?");
+
+			while (rs.next()) {
+				Cliente cliente = new Cliente();
+				cliente.idCliente = rs.getInt(1);
+				cliente.nome = rs.getString(2);
+				cliente.email = rs.getString(3);
+				cliente.telefone = rs.getString(4);
+				cliente.tipoPessoa = rs.getString(5);
+				cliente.documento = rs.getString(6);
+				cliente.status = rs.getString(7);
+				clienteList.add(cliente);
+			}
+			st.close();
+			rs.close();
+			return clienteList;
+
+		} catch (Exception e) {
+			Vm.debug(e.getMessage());
+			throw e;
+		}
+	}
+
 
 	public int findClienteByCnpjCpf(String documento) throws SQLException {
 
@@ -99,6 +127,7 @@ public class ClienteDAO {
 			rs.close();
 		}
 	}
+	
 		public static Cliente findMaxIdCliente() throws SQLException {
 			Cliente cliente = new Cliente();
 			try {

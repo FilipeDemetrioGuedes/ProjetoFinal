@@ -23,11 +23,13 @@ public class ListarClientesWindow extends Window {
 	private Button btVoltar;
 	private ClienteDAO clienteDAO;
 	private List<Cliente> clienteList;
+	private Button btSincronizar;
 	
 	public ListarClientesWindow() throws SQLException {
 		listaClientes = new ScrollContainer();
 		btIncluir = new Button("Incluir Clientes");
 		btVoltar = new Button("Voltar");
+		btSincronizar = new Button("Sincronizar");
 		clienteDAO = new ClienteDAO();
 		clienteList = clienteDAO.findAllClientes();
 		
@@ -79,8 +81,9 @@ public class ListarClientesWindow extends Window {
 			} catch (SQLException e) {
 				Vm.debug(e.getMessage());
 			}
-			add(btIncluir, CENTER -20 , BOTTOM -10);
-			add(btVoltar, AFTER +20, BOTTOM -10);
+			add(btIncluir, LEFT + 50, BOTTOM -10);
+			add(btSincronizar, AFTER +50  , BOTTOM -10);
+			add(btVoltar, AFTER + 50, BOTTOM -10);
 		}
 	private int getScrollContainerSize() {
 		int size = (clienteList.size() * 50) + (clienteList.size() * 3) + 10;
@@ -114,7 +117,7 @@ public class ListarClientesWindow extends Window {
 				
 			} else if (event.target == btVoltar) {
 				this.unpop();
-			}
+			}	
 			
 			break;
 		case PenEvent.PEN_DOWN:
