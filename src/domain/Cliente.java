@@ -1,20 +1,21 @@
 package domain;
 
 public class Cliente {
-
-	public int idCliente;
+	public static final String STATUS_PENDENTE = "PENDENTE" ;
+	public static final String STATUS_OK = "OK" ;
+	public String id;
 	public String nome;
 	public String email;
 	public String telefone;
 	public String tipoPessoa;
-	public String documento;
+	public String cpfCnpj;
 	public String status;
 	
-	public int getIdCliente() {
-		return idCliente;
+	public String getId() {
+		return id;
 	}
-	public void setIdCliente(int idCliente) {
-		this.idCliente = idCliente;
+	public void setId(String id) {
+		this.id = id;
 	}
 	public String getNome() {
 		return nome;
@@ -28,6 +29,12 @@ public class Cliente {
 	public void setEmail(String email) {
 		this.email = email;
 	}
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
 	public String getTelefone() {
 		return telefone;
 	}
@@ -40,11 +47,11 @@ public class Cliente {
 	public void setTipoPessoa(String tipoPessoa) {
 		this.tipoPessoa = tipoPessoa;
 	}
-	public String getDocumento() {
-		return documento;
+	public String getCpfCnpj() {
+		return cpfCnpj;
 	}
-	public void setDocumento(String documento) {
-		this.documento = documento;
+	public void setCpfCnpj(String cpfCnpj) {
+		this.cpfCnpj = cpfCnpj;
 	}
 	
 }

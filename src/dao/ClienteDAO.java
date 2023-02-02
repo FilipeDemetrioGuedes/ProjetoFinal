@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import domain.Cliente;
+import service.ClienteService;
 import totalcross.sql.PreparedStatement;
 import totalcross.sql.ResultSet;
 import totalcross.sql.Statement;
@@ -12,16 +13,25 @@ import totalcross.sys.Vm;
 import util.DatabaseManager;
 
 public class ClienteDAO {
+	
+	private static ClienteDAO instance;
+	
+	public static ClienteDAO getInstance() {
+		if( instance == null) {
+			instance = new ClienteDAO();
+		}
+		return instance;
+	}
 
 	public boolean insertCliente(Cliente cliente) throws SQLException {
 		PreparedStatement ps = DatabaseManager.getConnection()
 				.prepareStatement("INSERT INTO CLIENTES VALUES (?,?,?,?,?,?,?)");
-		ps.setInt(1, cliente.idCliente);
+		ps.setString(1, cliente.id);
 		ps.setString(2, cliente.nome);
 		ps.setString(3, cliente.email);
 		ps.setString(4, cliente.telefone);
 		ps.setString(5, cliente.tipoPessoa);
-		ps.setString(6, cliente.documento);
+		ps.setString(6, cliente.cpfCnpj);
 		ps.setString(7, cliente.status);
 		int inserted = ps.executeUpdate();
 		ps.close();
@@ -29,10 +39,11 @@ public class ClienteDAO {
 		return inserted > 0;
 	}
 	public boolean atualizarCliente(Cliente cliente , Cliente clienteClicado) throws SQLException {
-		PreparedStatement ps = DatabaseManager.getConnection().prepareStatement("UPDATE CLIENTES SET EMAIL =? , TELEFONE =? WHERE IDCLIENTE =?");
+		PreparedStatement ps = DatabaseManager.getConnection().prepareStatement("UPDATE CLIENTES SET EMAIL =? , TELEFONE =? , STATUS =? WHERE ID =?");
 		ps.setString(1, cliente.email);
 		ps.setString(2, cliente.telefone);
-		ps.setInt(3, clienteClicado.idCliente);
+		ps.setString(3, cliente.status);
+		ps.setString(4, clienteClicado.id);
 		
 		int updated = ps.executeUpdate();
 		ps.close();
@@ -41,8 +52,8 @@ public class ClienteDAO {
 	}
 	
 	public boolean excluirCliente(Cliente cliente) throws SQLException {
-		PreparedStatement ps = DatabaseManager.getConnection().prepareStatement("DELETE FROM  CLIENTES WHERE IDCLIENTE =?");
-		ps.setInt(1,cliente.idCliente);
+		PreparedStatement ps = DatabaseManager.getConnection().prepareStatement("DELETE FROM  CLIENTES WHERE ID =?");
+		ps.setString(1,cliente.id);
 		
 		int excluded = ps.executeUpdate();
 		ps.close();
@@ -54,16 +65,16 @@ public class ClienteDAO {
 		List<Cliente> clienteList = new ArrayList<Cliente>();
 		try {
 			Statement st = DatabaseManager.getConnection().createStatement();
-			ResultSet rs = st.executeQuery("SELECT IDCLIENTE,NOME , EMAIL, TELEFONE , TIPOPESSOA , DOCUMENTO FROM CLIENTES");
+			ResultSet rs = st.executeQuery("SELECT ID,NOME , EMAIL, TELEFONE , TIPOPESSOA , CPFCNPJ FROM CLIENTES");
 
 			while (rs.next()) {
 				Cliente cliente = new Cliente();
-				cliente.idCliente = rs.getInt(1);
+				cliente.id = rs.getString(1);
 				cliente.nome = rs.getString(2);
 				cliente.email = rs.getString(3);
 				cliente.telefone = rs.getString(4);
 				cliente.tipoPessoa = rs.getString(5);
-				cliente.documento = rs.getString(6);
+				cliente.cpfCnpj = rs.getString(6);
 				clienteList.add(cliente);
 			}
 			st.close();
@@ -79,21 +90,22 @@ public class ClienteDAO {
 	public List<Cliente> findAllClientesByStatus() throws SQLException {
 		List<Cliente> clienteList = new ArrayList<Cliente>();
 		try {
-			Statement st = DatabaseManager.getConnection().createStatement();
-			ResultSet rs = st.executeQuery("SELECT IDCLIENTE,NOME , EMAIL, TELEFONE , TIPOPESSOA , DOCUMENTO , STATUS FROM CLIENTES WHERE STATUS = ?");
-
+			PreparedStatement ps = DatabaseManager.getConnection().prepareStatement("SELECT ID,NOME , EMAIL, TELEFONE , TIPOPESSOA , CPFCNPJ , STATUS FROM CLIENTES WHERE STATUS = ?");
+			ps.setString(1, Cliente.STATUS_PENDENTE);
+			ResultSet rs = ps.executeQuery();
+			
 			while (rs.next()) {
 				Cliente cliente = new Cliente();
-				cliente.idCliente = rs.getInt(1);
+				cliente.id = rs.getString(1);
 				cliente.nome = rs.getString(2);
 				cliente.email = rs.getString(3);
 				cliente.telefone = rs.getString(4);
 				cliente.tipoPessoa = rs.getString(5);
-				cliente.documento = rs.getString(6);
+				cliente.cpfCnpj = rs.getString(6);
 				cliente.status = rs.getString(7);
 				clienteList.add(cliente);
 			}
-			st.close();
+			ps.close();
 			rs.close();
 			return clienteList;
 
@@ -104,10 +116,10 @@ public class ClienteDAO {
 	}
 
 
-	public int findClienteByCnpjCpf(String documento) throws SQLException {
+	public int findClienteByCnpjCpf(String cpfCnpj) throws SQLException {
 
 		Statement st = DatabaseManager.getConnection().createStatement();
-		ResultSet rs = st.executeQuery("SELECT COUNT(1) FROM CLIENTES WHERE DOCUMENTO = '" + documento + "'");
+		ResultSet rs = st.executeQuery("SELECT COUNT(1) FROM CLIENTES WHERE CPFCNPJ = '" + cpfCnpj + "'");
 		try {
 
 			if (rs.next()) {
@@ -132,10 +144,10 @@ public class ClienteDAO {
 			Cliente cliente = new Cliente();
 			try {
 				Statement st = DatabaseManager.getConnection().createStatement();
-				ResultSet rs = st.executeQuery("SELECT MAX(IDCLIENTE) FROM CLIENTES");
+				ResultSet rs = st.executeQuery("SELECT MAX(ID) FROM CLIENTES");
 				while (rs.next()) {
 					
-					cliente.idCliente = rs.getInt(1);
+					cliente.id = rs.getString(1);
 				}
 				st.close();
 				rs.close();

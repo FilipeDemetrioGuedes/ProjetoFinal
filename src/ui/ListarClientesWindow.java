@@ -5,6 +5,8 @@ import java.util.List;
 
 import dao.ClienteDAO;
 import domain.Cliente;
+import service.ClienteService;
+import sync.ClienteRestApi;
 import totalcross.sys.Settings;
 import totalcross.sys.Vm;
 import totalcross.ui.Button;
@@ -24,12 +26,14 @@ public class ListarClientesWindow extends Window {
 	private ClienteDAO clienteDAO;
 	private List<Cliente> clienteList;
 	private Button btSincronizar;
+	private Button btBuscar;
 	
 	public ListarClientesWindow() throws SQLException {
 		listaClientes = new ScrollContainer();
 		btIncluir = new Button("Incluir Clientes");
 		btVoltar = new Button("Voltar");
 		btSincronizar = new Button("Sincronizar");
+		btBuscar = new Button("Buscar Clientes");
 		clienteDAO = new ClienteDAO();
 		clienteList = clienteDAO.findAllClientes();
 		
@@ -60,7 +64,7 @@ public class ListarClientesWindow extends Window {
 		dadosArray[1] = ("Email: " + cliente.email);
 		dadosArray[2] = ("Fone: " + cliente.telefone);
 		dadosArray[3] = ("Pessoa: " +cliente.tipoPessoa);
-		dadosArray[4] = ("CPF/CNPJ: " +cliente.documento);
+		dadosArray[4] = ("CPF/CNPJ: " +cliente.cpfCnpj);
 		
 
 		return dadosArray;
@@ -81,9 +85,10 @@ public class ListarClientesWindow extends Window {
 			} catch (SQLException e) {
 				Vm.debug(e.getMessage());
 			}
-			add(btIncluir, LEFT + 50, BOTTOM -10);
-			add(btSincronizar, AFTER +50  , BOTTOM -10);
-			add(btVoltar, AFTER + 50, BOTTOM -10);
+			add(btIncluir, LEFT + 20, BOTTOM -10);
+			add(btSincronizar, AFTER +20  , BOTTOM -10);
+			add(btBuscar, AFTER +20  , BOTTOM -10);
+			add(btVoltar, AFTER + 20, BOTTOM -10);
 		}
 	private int getScrollContainerSize() {
 		int size = (clienteList.size() * 50) + (clienteList.size() * 3) + 10;
@@ -99,6 +104,21 @@ public class ListarClientesWindow extends Window {
 	public void popup() {
 		setRect(0, 0, Settings.screenWidth, Settings.screenHeight);
 		super.popup();
+	}
+	
+	public void inserirWebClient(List<Cliente> clienteList) {
+		try {
+			for (Cliente cliente : clienteList) {
+				cliente.status = "OK";
+				if(ClienteService.getInstance().inserirCliente(cliente)) {
+					ClienteRestApi clienteApi = new ClienteRestApi();
+					clienteApi.atualizaWeb(cliente);
+				}
+			}
+			reloadList();
+		} catch (Exception e) {
+		}
+		
 	}
 	
 	@Override
@@ -117,7 +137,27 @@ public class ListarClientesWindow extends Window {
 				
 			} else if (event.target == btVoltar) {
 				this.unpop();
-			}	
+			}	else if (event.target == btSincronizar) {
+				ClienteRestApi clienteApi = new ClienteRestApi();
+				List<Cliente> clienteList;
+				try {
+					clienteList = ClienteDAO.getInstance().findAllClientesByStatus();
+					for (Cliente cliente : clienteList) {
+						cliente.status = cliente.STATUS_OK;
+						String retorno = clienteApi.enviaWeb(cliente);
+						ClienteDAO.getInstance().atualizarCliente(cliente, cliente);
+					}
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				
+				}
+				
+			else if (event.target == btBuscar) {
+				ClienteRestApi clienteApi = new ClienteRestApi();
+				List<Cliente> retorno = clienteApi.buscaWeb();
+				inserirWebClient(retorno);
+			}
 			
 			break;
 		case PenEvent.PEN_DOWN:

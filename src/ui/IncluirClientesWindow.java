@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 import dao.ClienteDAO;
 import domain.Cliente;
-import sync.ClienteRestApi;
+import service.ClienteService;
 import totalcross.sys.Settings;
 import totalcross.ui.Button;
 import totalcross.ui.ComboBox;
@@ -14,7 +14,6 @@ import totalcross.ui.Window;
 import totalcross.ui.dialog.MessageBox;
 import totalcross.ui.event.ControlEvent;
 import totalcross.ui.event.Event;
-import util.ValidadorCpfCnpj;
 
 public class IncluirClientesWindow extends Window {
 
@@ -73,10 +72,10 @@ public class IncluirClientesWindow extends Window {
 		cbTipoPessoa.setSelectedItem(cliente.tipoPessoa);
 		cbTipoPessoa.setEnabled(false);
 		if ("Jurídica".equals(cliente.tipoPessoa)) {
-			editCnpj.setText(cliente.documento);
+			editCnpj.setText(cliente.cpfCnpj);
 			editCnpj.setEditable(false);
 		} else {
-			editCpf.setText(cliente.documento);
+			editCpf.setText(cliente.cpfCnpj);
 			editCpf.setEditable(false);
 		}
 	
@@ -149,18 +148,11 @@ public class IncluirClientesWindow extends Window {
 	private void insertCliente() {
 		try {
 			Cliente cliente = screenToDomain();
-			if (!validateFields(cliente))
-				throw new Exception("Campos Invalidos!");
-
-			if (cliente == null)
-				return;
-				if (clienteDAO.insertCliente(cliente)) {
-					new MessageBox("Info", "Cliente Inserido!").popup();
-					//ClienteRestApi clienteApi = new ClienteRestApi();
-					//String retorno = clienteApi.conecta(cliente);
-					//new MessageBox("Info", retorno).popup();;
-				}
+			if(ClienteService.getInstance().inserirCliente(cliente)) {
+				new MessageBox("Info", "Cliente Inserido!").popup();
 				unpop();
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -202,7 +194,7 @@ public class IncluirClientesWindow extends Window {
 
 		String tipoPessoa = (String) cbTipoPessoa.getSelectedItem();
 		String documento = "";
-		if ("Jurídica".equals(tipoPessoa)) {
+		if ("JURIDICA".equals(tipoPessoa)) {
 			documento = editCnpj.getTextWithoutMask();
 		} else {
 			documento = editCpf.getTextWithoutMask();
@@ -213,21 +205,17 @@ public class IncluirClientesWindow extends Window {
 		return cliente;
 	}
 
-	private Cliente createDomain(String nome, String email, String telefone, String documento, String tipoPessoa) throws SQLException {
+	private Cliente createDomain (String nome, String email, String telefone, String documento, String tipoPessoa) throws SQLException {
 
 		Cliente cliente = new Cliente();
-		Cliente ultimoCliente = ClienteDAO.findMaxIdCliente();
-		if (ultimoCliente.idCliente > 0) {
-			cliente.idCliente = ++ultimoCliente.idCliente;
-		} else {
-			cliente.idCliente = 1;
-		}
+	
+		cliente.id = documento;
 		cliente.nome = nome;
 		cliente.email = email;
 		cliente.telefone = telefone;
 		cliente.tipoPessoa = tipoPessoa;
-		cliente.documento = documento;
-		cliente.status = "Pendente";
+		cliente.cpfCnpj = documento;
+		cliente.status = Cliente.STATUS_PENDENTE;
 		return cliente;
 	}
 	
@@ -238,49 +226,10 @@ public class IncluirClientesWindow extends Window {
 		}
 		return true;
 	}
-	private boolean validateFields(Cliente cliente) throws SQLException {
-		if (cliente.nome.isEmpty()) {
-			new MessageBox("Atenção", "Digite um Nome!").popup();
-			return false;
-		}
-		if (cliente.telefone.isEmpty()) {
-			new MessageBox("Atenção", "Digite um Telefone!").popup();
-			return false;
-		}
-		if (cbTipoPessoa.getSelectedItem() == null) {
-			new MessageBox("Atenção", "Escolha o Tipo de Pessoa").popup();
-			return false;
-		}
-		if (cliente.documento.isEmpty()) {
-
-			new MessageBox("Atenção", "Digite o Numero do Seu Documento!").popup();
-			return false;
-		}
-		if ("Jurídica".equals(cbTipoPessoa.getSelectedItem())) {
-			if (!ValidadorCpfCnpj.isCNPJ(cliente.documento)) {
-				new MessageBox("Atenção", "Cnpj Invalido!").popup();
-				return false;
-			}
-
-		} else {
-			if (!ValidadorCpfCnpj.isCPF(cliente.documento)) {
-				new MessageBox("Atenção", "Cpf Invalido!").popup();
-				return false;
-			}
-
-		}
-		int count = clienteDAO.findClienteByCnpjCpf(cliente.documento);
-		if (count > 0) {
-			new MessageBox("Atenção", "Cliente ja Cadastrado!").popup();
-			return false;
-		}
-		return true;
-	}
-
 	public void visibilidade() {
 		String tipoPessoa = (String) cbTipoPessoa.getSelectedItem();
 
-		if ("Jurídica".equals(tipoPessoa)) {
+		if ("JURIDICA".equals(tipoPessoa)) {
 			editCnpj.setVisible(true);
 			editCpf.setVisible(false);
 		} else {
