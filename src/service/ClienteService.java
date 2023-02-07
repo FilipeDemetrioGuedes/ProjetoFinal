@@ -32,15 +32,31 @@ public class ClienteService {
 			
 			
 	}
+	public Cliente createDomain (String nome, String email, String telefone, String cpfCnpj, String tipoPessoa) {
+
+		Cliente cliente = new Cliente();
 	
-	private boolean validateUpdate(String telefone) {
+		cliente.id = cpfCnpj;
+		cliente.nome = nome;
+		cliente.email = email;
+		cliente.telefone = telefone;
+		cliente.tipoPessoa = tipoPessoa;
+		cliente.cpfCnpj = cpfCnpj;
+		cliente.status = Cliente.STATUS_PENDENTE;
+		return cliente;
+	}
+	
+	
+	public boolean validateUpdate(String telefone) {
 		if (telefone.isEmpty()) {
-			new MessageBox("Atenção", "Digite um Telefone!").popup();
+			return false;
+		}
+		if (telefone.length() < 11) {
 			return false;
 		}
 		return true;
 	}
-	private boolean validateFields(Cliente cliente) throws SQLException {
+	public boolean validateFields(Cliente cliente) throws SQLException {
 		if (cliente.nome.isEmpty()) {
 			new MessageBox("Atenção", "Digite um Nome!").popup();
 			return false;

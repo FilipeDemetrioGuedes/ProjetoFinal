@@ -123,6 +123,42 @@ public class ClienteRestApi {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+		
+		public boolean  deletaWeb(Cliente cliente) {
+
+			String msg = "";
+
+			try {
+				HttpStream.Options options = new HttpStream.Options();
+				// define os tipos de conexoes , post = envio , get = receber , delete = excluir
+				// , alterar = put
+				options.httpType = totalcross.net.HttpStream.GET;
+				options.doPost = false;
+				options.doGet = true;
+				options.postHeaders.put("Content-Type", "application/json;charset=utf-8");
+
+				HttpStream httpStream = new HttpStream(new URI("http://localhost:8080/clientes/excluir/"+cliente.cpfCnpj), options);
+
+				Vm.debug("");
+				ByteArrayStream bas = new ByteArrayStream(4096);
+				bas.readFully(httpStream, 10, 2048);
+				String data = new String(bas.getBuffer(), 0, bas.available());
+				if("Excluido".equals(data)) {
+					return true;
+				}
+				
+				return false;
+
+//	         if (httpStream.responseCode == 200){
+//	           
+//	         }
+			} catch (IOException e1) {
+				msg = "erro";
+				return false;
+			} catch (Exception e) {
+				return false;
+			}
 
 	}
 }

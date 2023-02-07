@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import dao.ClienteDAO;
 import domain.Cliente;
 import service.ClienteService;
+import sync.ClienteRestApi;
 import totalcross.sys.Settings;
 import totalcross.ui.Button;
 import totalcross.ui.ComboBox;
@@ -37,7 +38,7 @@ public class IncluirClientesWindow extends Window {
 	public IncluirClientesWindow() {
 		this.atualizando = false;
 		editNome = new Edit();
-		editTelefone = new Edit("(99)9999-9999");
+		editTelefone = new Edit("(99)99999-9999");
 		editTelefone.setMode(Edit.NORMAL, true);
 		editTelefone.setValidChars("0123456789");
 		editEmail = new Edit();
@@ -71,15 +72,14 @@ public class IncluirClientesWindow extends Window {
 		editTelefone.setText(cliente.telefone);
 		cbTipoPessoa.setSelectedItem(cliente.tipoPessoa);
 		cbTipoPessoa.setEnabled(false);
-		if ("Jurídica".equals(cliente.tipoPessoa)) {
+		if ("JURIDICA".equals(cliente.tipoPessoa)) {
 			editCnpj.setText(cliente.cpfCnpj);
 			editCnpj.setEditable(false);
 		} else {
 			editCpf.setText(cliente.cpfCnpj);
 			editCpf.setEditable(false);
 		}
-	
-		
+
 	}
 
 	@Override
@@ -125,17 +125,16 @@ public class IncluirClientesWindow extends Window {
 				this.unpop();
 			} else if (event.target == btInserir) {
 				insertCliente();
-				
 
 			} else if (event.target == cbTipoPessoa) {
 				visibilidade();
 
 			} else if (event.target == btAtualizar) {
 				atualizarCliente();
-			
+
 			} else if (event.target == btExcluir) {
 				excluirCliente();
-				
+
 			}
 			break;
 
@@ -148,11 +147,11 @@ public class IncluirClientesWindow extends Window {
 	private void insertCliente() {
 		try {
 			Cliente cliente = screenToDomain();
-			if(ClienteService.getInstance().inserirCliente(cliente)) {
+			if (ClienteService.getInstance().inserirCliente(cliente)) {
 				new MessageBox("Info", "Cliente Inserido!").popup();
 				unpop();
 			}
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -161,8 +160,11 @@ public class IncluirClientesWindow extends Window {
 	private void atualizarCliente() {
 		try {
 			Cliente cliente = screenToDomain();
-			if (!validateUpdate(cliente.telefone))
+			if (!ClienteService.getInstance().validateUpdate(cliente.telefone)) {
+
+				new MessageBox("Atenção", "Digite um Telefone!").popup();
 				throw new Exception("Campos Invalidos!");
+			}
 
 			if (clienteDAO.atualizarCliente(cliente, clienteClicado)) {
 				new MessageBox("Info", "Cliente Atualizado!").popup();
@@ -177,10 +179,29 @@ public class IncluirClientesWindow extends Window {
 		try {
 			if (clienteClicado == null)
 				return;
-			if (clienteDAO.excluirCliente(clienteClicado)) {
-				new MessageBox("info", "Cliente Excluido").popup();
-			}
-			unpop();
+			MessageBox mb = new MessageBox("Info!", "Confirma Exclusão?", new String[]{"Sim!","Não!"});
+				mb.popup();
+				if (mb.getPressedButtonIndex() == 0) {
+					ClienteRestApi clienteApi = new ClienteRestApi();
+					if(clienteApi.deletaWeb(clienteClicado)) {
+						if (clienteDAO.excluirCliente(clienteClicado)) {
+							new MessageBox("info", "Cliente Excluido").popup();
+						}
+						unpop();
+					} else {
+						MessageBox mb2 = new MessageBox("Info!", "Não foi Possivel Excluir na Web.Confirma Exclusão no App?", new String[]{"Sim!","Não!"});
+						mb2.popup();
+						if (mb2.getPressedButtonIndex() == 0) {
+							if (clienteDAO.excluirCliente(clienteClicado)) {
+								new MessageBox("info", "Cliente Excluido").popup();
+							}
+							unpop();
+						}
+					}
+				
+				}
+			
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 
@@ -200,32 +221,13 @@ public class IncluirClientesWindow extends Window {
 			documento = editCpf.getTextWithoutMask();
 
 		}
-		
-		Cliente cliente = createDomain(nome, email, telefone, documento, tipoPessoa);
+
+		Cliente cliente = ClienteService.getInstance().createDomain(nome, email, telefone, documento, tipoPessoa);
 		return cliente;
 	}
 
-	private Cliente createDomain (String nome, String email, String telefone, String documento, String tipoPessoa) throws SQLException {
+	
 
-		Cliente cliente = new Cliente();
-	
-		cliente.id = documento;
-		cliente.nome = nome;
-		cliente.email = email;
-		cliente.telefone = telefone;
-		cliente.tipoPessoa = tipoPessoa;
-		cliente.cpfCnpj = documento;
-		cliente.status = Cliente.STATUS_PENDENTE;
-		return cliente;
-	}
-	
-	private boolean validateUpdate(String telefone) {
-		if (telefone.isEmpty()) {
-			new MessageBox("Atenção", "Digite um Telefone!").popup();
-			return false;
-		}
-		return true;
-	}
 	public void visibilidade() {
 		String tipoPessoa = (String) cbTipoPessoa.getSelectedItem();
 
