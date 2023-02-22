@@ -1,7 +1,5 @@
 package ui;
 
-import java.sql.SQLException;
-
 import dao.ClienteDAO;
 import domain.Cliente;
 import service.ClienteService;
@@ -10,11 +8,14 @@ import totalcross.sys.Settings;
 import totalcross.ui.Button;
 import totalcross.ui.ComboBox;
 import totalcross.ui.Edit;
+import totalcross.ui.ImageControl;
 import totalcross.ui.Label;
 import totalcross.ui.Window;
 import totalcross.ui.dialog.MessageBox;
 import totalcross.ui.event.ControlEvent;
 import totalcross.ui.event.Event;
+import totalcross.ui.gfx.Color;
+import util.Images;
 
 public class IncluirClientesWindow extends Window {
 
@@ -32,7 +33,7 @@ public class IncluirClientesWindow extends Window {
 	private Button btExcluir;
 	private ClienteDAO clienteDAO;
 	private Cliente clienteClicado;
-
+	private ImageControl back;
 	private boolean atualizando;
 
 	public IncluirClientesWindow() {
@@ -60,6 +61,9 @@ public class IncluirClientesWindow extends Window {
 		btExcluir = new Button("Excluir");
 
 		clienteDAO = new ClienteDAO();
+		back = new ImageControl(Images.background);
+		back.scaleToFit = true;
+		back.centerImage = true;
 	}
 
 	public IncluirClientesWindow(Cliente cliente) {
@@ -84,14 +88,14 @@ public class IncluirClientesWindow extends Window {
 
 	@Override
 	public void initUI() {
-
+		add(back,LEFT,TOP,FILL,FILL);
 		add(new Label("Nome"), LEFT + 10, TOP + 10);
 		add(editNome, LEFT + 10, AFTER + 5, FILL - 10, PREFERRED);
 		add(new Label("Telefone"), LEFT + 10, AFTER + 10);
 		add(editTelefone, LEFT + 10, AFTER + 5);
 		add(new Label("Email"), LEFT + 10, AFTER + 10);
 		add(editEmail, LEFT + 10, AFTER + 5, FILL - 10, PREFERRED);
-		add(new Label("Escolha o Tipo de Pessoa"), LEFT + 10, AFTER + 10);
+		add(new Label("Tipo de Pessoa"), LEFT + 10, AFTER + 10);
 		add(cbTipoPessoa, LEFT + 10, AFTER + 5);
 
 		add(new Label("Documento"), LEFT + 10, AFTER + 10);
@@ -106,7 +110,7 @@ public class IncluirClientesWindow extends Window {
 
 		}
 		add(btVoltar, RIGHT - 20, BOTTOM - 5);
-
+		
 		visibilidade();
 
 	}
@@ -148,7 +152,9 @@ public class IncluirClientesWindow extends Window {
 		try {
 			Cliente cliente = screenToDomain();
 			if (ClienteService.getInstance().inserirCliente(cliente)) {
-				new MessageBox("Info", "Cliente Inserido!").popup();
+				MessageBox mbInserido = new MessageBox("Info", "Cliente Inserido!");
+				mbInserido.setBackColor(Color.BLUE);
+				mbInserido.popup();
 				unpop();
 			}
 
@@ -161,13 +167,15 @@ public class IncluirClientesWindow extends Window {
 		try {
 			Cliente cliente = screenToDomain();
 			if (!ClienteService.getInstance().validateUpdate(cliente.telefone)) {
-
-				new MessageBox("Atenção", "Digite um Telefone!").popup();
+				new MessageBox("Atenção", "Campo Telefone não pode ser vazio e deve conter 11 Digitos!").popup();
 				throw new Exception("Campos Invalidos!");
 			}
-
+			
+			cliente.status = cliente.STATUS_PENDENTE_ATUALIZACAO;
 			if (clienteDAO.atualizarCliente(cliente, clienteClicado)) {
-				new MessageBox("Info", "Cliente Atualizado!").popup();
+				MessageBox mbAtualizar = new MessageBox("Info", "Cliente Atualizado!" );
+				mbAtualizar.setBackColor(Color.BLUE);
+				mbAtualizar.popup();
 			}
 			unpop();
 		} catch (Exception e) {
@@ -177,31 +185,48 @@ public class IncluirClientesWindow extends Window {
 
 	private void excluirCliente() {
 		try {
+			Cliente cliente = screenToDomain();
 			if (clienteClicado == null)
 				return;
-			MessageBox mb = new MessageBox("Info!", "Confirma Exclusão?", new String[]{"Sim!","Não!"});
-				mb.popup();
-				if (mb.getPressedButtonIndex() == 0) {
-					ClienteRestApi clienteApi = new ClienteRestApi();
-					if(clienteApi.deletaWeb(clienteClicado)) {
-						if (clienteDAO.excluirCliente(clienteClicado)) {
-							new MessageBox("info", "Cliente Excluido").popup();
-						}
-						unpop();
-					} else {
-						MessageBox mb2 = new MessageBox("Info!", "Não foi Possivel Excluir na Web.Confirma Exclusão no App?", new String[]{"Sim!","Não!"});
-						mb2.popup();
-						if (mb2.getPressedButtonIndex() == 0) {
-							if (clienteDAO.excluirCliente(clienteClicado)) {
-								new MessageBox("info", "Cliente Excluido").popup();
-							}
-							unpop();
-						}
-					}
+			MessageBox mb = new MessageBox("Info!", "Confirma Exclusão?", new String[] { "Sim!", "Não!" });
+			mb.setBackColor(Color.BLUE);
+			mb.popup();
+			
+			if (mb.getPressedButtonIndex() == 0 ) {
+				clienteClicado.status = Cliente.STATUS_PENDENTE_EXCLUSAO;
 				
-				}
+				if (clienteDAO.atualizarCliente(clienteClicado,clienteClicado)) {
+					MessageBox mbExcluir = new MessageBox("info", "Cliente Excluido");
+					mbExcluir.setBackColor(Color.BLUE);
+					mbExcluir.popup();
+				} 
+			}
+			unpop();
+		
 			
+//			if (mb.getPressedButtonIndex() == 0) {
+//				ClienteRestApi clienteApi = new ClienteRestApi();
+//				if (clienteApi.deletaWeb(clienteClicado)) {
+//					if (clienteDAO.excluirCliente(clienteClicado)) {
+//						new MessageBox("info", "Cliente Excluido").popup();
+//					}
+//					unpop();
+//				} else {
+//					MessageBox mb2 = new MessageBox("Info!",
+//							"Não foi Possivel Excluir na Web.Confirma Exclusão no App?",
+//							new String[] { "Sim!", "Não!" });
+//					mb2.popup();
+//					if (mb2.getPressedButtonIndex() == 0) {
+//						if (clienteDAO.excluirCliente(clienteClicado)) {
+//							new MessageBox("info", "Cliente Excluido").popup();
+//							
+//						}
+//						unpop();
+//					}
+				
+
 			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 
@@ -225,8 +250,6 @@ public class IncluirClientesWindow extends Window {
 		Cliente cliente = ClienteService.getInstance().createDomain(nome, email, telefone, documento, tipoPessoa);
 		return cliente;
 	}
-
-	
 
 	public void visibilidade() {
 		String tipoPessoa = (String) cbTipoPessoa.getSelectedItem();

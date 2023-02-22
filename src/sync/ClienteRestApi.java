@@ -13,6 +13,8 @@ import totalcross.json.JSONObject;
 import totalcross.net.HttpStream;
 import totalcross.net.URI;
 import totalcross.sys.Vm;
+import totalcross.ui.dialog.MessageBox;
+import totalcross.ui.gfx.Color;
 
 public class ClienteRestApi {
 
@@ -40,11 +42,12 @@ public class ClienteRestApi {
 			ByteArrayStream bas = new ByteArrayStream(4096);
 			bas.readFully(httpStream, 10, 2048);
 			String data = new String(bas.getBuffer(), 0, bas.available());
+			
+			if (httpStream.responseCode == 201){
+				return "Ok";
+			}
 			return data;
-
-//         if (httpStream.responseCode == 200){
-//           
-//         }
+			
 		} catch (IOException e1) {
 			msg = "erro";
 			return msg;
@@ -75,11 +78,12 @@ public class ClienteRestApi {
 			ByteArrayStream bas = new ByteArrayStream(4096);
 			bas.readFully(httpStream, 10, 2048);
 			String data = new String(bas.getBuffer(), 0, bas.available());
-			return data;
 
-//         if (httpStream.responseCode == 200){
-//           
-//         }
+         if (httpStream.responseCode == 200){
+           return "Atualizado";
+         }
+         return data;
+         
 		} catch (IOException e1) {
 			msg = "erro";
 			return msg;
@@ -112,11 +116,10 @@ public class ClienteRestApi {
 				Cliente cliente = JSONFactory.parse(clienteJson, Cliente.class);
 				clienteList.add(cliente);
 			}
-			return clienteList;
 
-//         if (httpStream.responseCode == 200){
-//           
-//         }
+			if (httpStream.responseCode == 200){
+         }
+			return clienteList;
 		} catch (IOException e1) {
 			msg = "erro";
 			return null;
@@ -125,7 +128,7 @@ public class ClienteRestApi {
 		}
 	}
 		
-		public boolean  deletaWeb(Cliente cliente) {
+		public String  deletaWeb(Cliente cliente) {
 
 			String msg = "";
 
@@ -144,20 +147,19 @@ public class ClienteRestApi {
 				ByteArrayStream bas = new ByteArrayStream(4096);
 				bas.readFully(httpStream, 10, 2048);
 				String data = new String(bas.getBuffer(), 0, bas.available());
-				if("Excluido".equals(data)) {
-					return true;
-				}
+			
 				
-				return false;
 
-//	         if (httpStream.responseCode == 200){
-//	           
-//	         }
+	         if (httpStream.responseCode == 200){
+	             return "Excluido";
+	         }
+	         return data;
+	         
 			} catch (IOException e1) {
 				msg = "erro";
-				return false;
+				return null;
 			} catch (Exception e) {
-				return false;
+				return null;
 			}
 
 	}

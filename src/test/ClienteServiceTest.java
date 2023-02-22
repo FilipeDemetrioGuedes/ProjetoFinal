@@ -8,6 +8,8 @@ import org.junit.Test;
 import domain.Cliente;
 
 import service.ClienteService;
+import totalcross.ui.dialog.MessageBox;
+import util.ValidadorCpfCnpj;
 
 
 public class ClienteServiceTest {
@@ -36,10 +38,34 @@ public class ClienteServiceTest {
 		Assert.assertTrue(validacao);
 	}
 	
+
 	@Test
-	public void deveRetornarFalsoParaTelefoneInvalido() {
-		String telefone = "33441257" ;
-		boolean validacao = ClienteService.getInstance().validateUpdate(telefone);
-		Assert.assertFalse(validacao);
+	public void deveValidarCorretamenteONumeroDoDoCpf() {
+		String documento = "87273237060";
+		boolean isValido = (ValidadorCpfCnpj.isCPF(documento));
+		Assert.assertTrue(isValido);
+		
 	}
+	@Test
+	public void deveValidarCorretamenteONumeroDoDoCnpj() {
+		String documento = "98613514000117";
+		boolean isValido = (ValidadorCpfCnpj.isCNPJ(documento));
+		Assert.assertTrue(isValido);
+		
+	}
+	@Test
+	public void deveDarErroAoInserirCnpjInvalido() {
+		String documento = "884515787541512";
+		boolean isValido = (ValidadorCpfCnpj.isCNPJ(documento));
+		Assert.assertFalse(isValido);
+		
+	}
+	@Test
+	public void deveDarErroAoInserirCpfInvalido() {
+		String documento = "07455223448";
+		boolean isValido = (ValidadorCpfCnpj.isCPF(documento));
+		Assert.assertFalse(isValido);
+		
+	}
+	
 }

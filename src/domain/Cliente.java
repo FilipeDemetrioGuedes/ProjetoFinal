@@ -3,6 +3,10 @@ package domain;
 public class Cliente {
 	public static final String STATUS_PENDENTE = "PENDENTE" ;
 	public static final String STATUS_OK = "OK" ;
+	public static final String STATUS_PENDENTE_ATUALIZACAO = "PENDENTE ATUALIZAÇÃO" ;
+	public static final String STATUS_ATUALIZADO = "ATUALIZADO" ;
+	public static final String STATUS_PENDENTE_EXCLUSAO = "INATIVO";
+	
 	public String id;
 	public String nome;
 	public String email;
